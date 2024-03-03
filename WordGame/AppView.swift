@@ -8,6 +8,8 @@ struct Game {
     @Dependency(\.continuousClock) var clock
     private let correctWordProbability: Double = 25.0
     private let secondsToAnswer: Int = 5
+    private let allowedIncorrectAttempts: Int = 3
+    private let allowedWordPairs: Int = 15
     
     @ObservableState
     struct State {
@@ -41,8 +43,8 @@ struct Game {
     }
     
     private func valid(state: State) -> Bool {
-        if state.statistics.attemptsCounter >= 15 ||
-            state.statistics.wrongAttemptsCounter >= 3 {
+        if state.statistics.attemptsCounter >= allowedWordPairs ||
+            state.statistics.wrongAttemptsCounter >= allowedIncorrectAttempts {
             return false
          }
         return true
