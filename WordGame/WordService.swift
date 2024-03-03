@@ -1,10 +1,12 @@
 import Foundation
+import ComposableArchitecture
 
+@DependencyClient
 struct WordService {
     var wordpair: () async throws -> WordPair
 }
 
-extension WordService {
+extension WordService: DependencyKey {
     static let liveValue = Self(
         wordpair: {
             let translations = Bundle.main.decodeTranslations("words.json")
@@ -12,6 +14,13 @@ extension WordService {
             return WordPair(word1: "", word2: "", isCorrect: true)
         }
     )
+}
+
+extension DependencyValues {
+ var wordService: WordService {
+  get { self[WordService.self] }
+  set { self[WordService.self] = newValue }
+ }
 }
 
 extension Bundle {

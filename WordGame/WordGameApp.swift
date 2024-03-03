@@ -1,17 +1,15 @@
-//
-//  WordGameApp.swift
-//  WordGame
-//
-//  Created by Daniel on 03.03.24.
-//
-
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct WordGameApp: App {
     var body: some Scene {
         WindowGroup {
-            AppView()
+            AppView(
+                store: Store(initialState: Game.State()) {
+                    Game()
+                }
+            )
         }
     }
 }
