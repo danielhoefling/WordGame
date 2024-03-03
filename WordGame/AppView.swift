@@ -16,6 +16,7 @@ struct Game {
     enum Action: ViewAction {
         case view(View)
         case didReceiveWordPair(WordPair)
+        case nextWordPair
         
         enum View {
             case wrongButtonTapped
@@ -32,17 +33,35 @@ struct Game {
             case let .view(action):
                 switch action {
                 case .wrongButtonTapped:
-                       return .none
+                    if state.currentWordPair.isCorrect {
+                        state.statistics.wrongAttemptsCounter+=1
+                    } else {
+                        state.statistics.correctAttemptsCounter+=1
+                    }
+                    return .run { send in
+                        await send(.nextWordPair)
+                    }
                 case .correctButtonTapped:
-                       return .none
+                    if state.currentWordPair.isCorrect {
+                        state.statistics.correctAttemptsCounter+=1
+                    } else {
+                        state.statistics.wrongAttemptsCounter+=1
+                    }
+                    return .run { send in
+                        await send(.nextWordPair)
+                    }
                 case .task:
                     return .run { send in
-                        await send(.didReceiveWordPair(try await wordService.wordpair(correctWordProbability)))
+                        await send(.nextWordPair)
                     }
                 }
             case let .didReceiveWordPair(wordPair):
                 state.currentWordPair = wordPair
                 return .none
+            case .nextWordPair:
+                return .run { send in
+                    await send(.didReceiveWordPair(try await wordService.wordpair(correctWordProbability)))
+                }
             }
         }
     }
