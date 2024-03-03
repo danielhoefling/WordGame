@@ -11,7 +11,7 @@ extension WordService: DependencyKey {
         wordpair: {
             let translations = Bundle.main.decodeTranslations("words.json")
             
-            return WordPair(word1: "", word2: "", isCorrect: true)
+            return WordPair(word1: translations[0].text_eng, word2: translations[0].text_spa, isCorrect: true)
         }
     )
 }

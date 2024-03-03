@@ -8,16 +8,18 @@ struct Game {
     
     @ObservableState
     struct State {
-        var currentWordPair: WordPair = WordPair(word1: "Test", word2: "Test2", isCorrect: true)
+        var currentWordPair: WordPair = WordPair(word1: "", word2: "", isCorrect: true)
         var statistics: StatisticsState = .init()
     }
     
     enum Action: ViewAction {
         case view(View)
-
+        case didReceiveWordPair(WordPair)
+        
         enum View {
             case wrongButtonTapped
             case correctButtonTapped
+            case task
         }
     }
     
@@ -29,10 +31,17 @@ struct Game {
             case let .view(action):
                 switch action {
                 case .wrongButtonTapped:
-                        .none
+                       return .none
                 case .correctButtonTapped:
-                        .none
+                       return .none
+                case .task:
+                    return .run { send in
+                        await send(.didReceiveWordPair(try await wordService.wordpair()))
+                    }
                 }
+            case let .didReceiveWordPair(wordPair):
+                state.currentWordPair = wordPair
+                return .none
             }
         }
     }
@@ -60,6 +69,9 @@ struct AppView: View {
                     send(.wrongButtonTapped)
                 }
             }
+        }
+        .task {
+            send(.task)
         }
         .padding()
     }
