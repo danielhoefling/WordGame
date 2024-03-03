@@ -8,7 +8,7 @@ struct Game {
     
     @ObservableState
     struct State {
-        var currentWordPair: WordPair = WordPair(word1: "", word2: "", isCorrect: true)
+        var currentWordPair: WordPair = WordPair(word1: "Test", word2: "Test2", isCorrect: true)
         var statistics: StatisticsState = .init()
     }
     
@@ -44,17 +44,21 @@ struct AppView: View {
     
     var body: some View {
         VStack {
-            Text("Correct Attempts: \(0)")
+            Text("Correct Attempts: \(store.statistics.correctAttemptsCounter)")
                 .frame(maxWidth: .infinity, alignment: .trailing)
-            Text("Wrong Attempts: \(0)")
+            Text("Wrong Attempts: \(store.statistics.wrongAttemptsCounter)")
                 .frame(maxWidth: .infinity, alignment: .trailing)
             Spacer()
-            Text("Word1")
-            Text("Word2")
+            Text(store.currentWordPair.word1)
+            Text(store.currentWordPair.word2)
             Spacer()
             HStack {
-                Button("Correct") { }
-                Button("Wrong") { }
+                Button("Correct") { 
+                    send(.correctButtonTapped)
+                }
+                Button("Wrong") { 
+                    send(.wrongButtonTapped)
+                }
             }
         }
         .padding()
