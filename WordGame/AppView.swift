@@ -5,17 +5,27 @@ import ComposableArchitecture
 @Reducer
 struct Game {
     @Dependency(\.wordService) var wordService
+    @Dependency(\.continuousClock) var clock
     private let correctWordProbability: Double = 25.0
+    private let secondsToAnswer: Int = 5
+    private let allowedIncorrectAttempts: Int = 3
+    private let allowedWordPairs: Int = 15
     
     @ObservableState
     struct State {
         var currentWordPair: WordPair = WordPair(word1: "", word2: "", isCorrect: true)
         var statistics: StatisticsState = .init()
+        var timerInfo: TimerInfoState = .init()
+    }
+    
+    private enum CancelID {
+        case timer
     }
     
     enum Action: ViewAction {
         case view(View)
         case didReceiveWordPair(WordPair)
+        case timerTicked
         
         enum View {
             case wrongButtonTapped
@@ -32,6 +42,18 @@ struct Game {
         }
     }
     
+    private func valid(state: State) -> Bool {
+        if state.statistics.attemptsCounter >= allowedWordPairs ||
+            state.statistics.wrongAttemptsCounter >= allowedIncorrectAttempts {
+            return false
+         }
+        return true
+    }
+     
+    func quitGame() -> Effect<Action> {
+        exit(0)
+    }
+    
     var body: some Reducer<State, Action> {
         Reduce {
             state,
@@ -45,6 +67,10 @@ struct Game {
                     } else {
                         state.statistics.correctAttemptsCounter+=1
                     }
+                    if (!self.valid(state: state)) {
+                        return self.quitGame()
+                    }
+                    
                     return self.loadWordPair()
                 case .correctButtonTapped:
                     if state.currentWordPair.isCorrect {
@@ -52,12 +78,36 @@ struct Game {
                     } else {
                         state.statistics.wrongAttemptsCounter+=1
                     }
+                    if (!self.valid(state: state)) {
+                        return self.quitGame()
+                    }
+                    
                     return self.loadWordPair()
                 case .task:
                     return self.loadWordPair()
                 }
             case let .didReceiveWordPair(wordPair):
                 state.currentWordPair = wordPair
+                state.timerInfo.isTimerActive = true
+                state.timerInfo.secondsElapsed = 0
+                
+                return .run { [isTimerActive = state.timerInfo.isTimerActive] send in
+                    guard isTimerActive else { return }
+                    for await _ in self.clock.timer(interval: .seconds(1)) {
+                        await send(.timerTicked, animation: .interpolatingSpring(stiffness: 3000, damping: 40))
+                    }
+                }
+                .cancellable(id: CancelID.timer, cancelInFlight: true)
+            case .timerTicked:
+                state.timerInfo.secondsElapsed += 1
+                if (state.timerInfo.secondsElapsed >= secondsToAnswer) {
+                    state.statistics.wrongAttemptsCounter+=1
+                    if (!self.valid(state: state)) {
+                        return self.quitGame()
+                    }
+                    
+                    return self.loadWordPair()
+                }
                 return .none
             }
         }
