@@ -32,6 +32,18 @@ struct Game {
         }
     }
     
+    private func valid(state: State) -> Bool {
+        if state.statistics.attemptsCounter >= 15 ||
+            state.statistics.wrongAttemptsCounter >= 3 {
+            return false
+         }
+        return true
+    }
+     
+    func quitGame() -> Effect<Action> {
+        exit(0)
+    }
+    
     var body: some Reducer<State, Action> {
         Reduce {
             state,
@@ -45,6 +57,10 @@ struct Game {
                     } else {
                         state.statistics.correctAttemptsCounter+=1
                     }
+                    if (!self.valid(state: state)) {
+                        return self.quitGame()
+                    }
+                    
                     return self.loadWordPair()
                 case .correctButtonTapped:
                     if state.currentWordPair.isCorrect {
@@ -52,6 +68,10 @@ struct Game {
                     } else {
                         state.statistics.wrongAttemptsCounter+=1
                     }
+                    if (!self.valid(state: state)) {
+                        return self.quitGame()
+                    }
+                    
                     return self.loadWordPair()
                 case .task:
                     return self.loadWordPair()
