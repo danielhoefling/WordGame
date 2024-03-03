@@ -16,13 +16,15 @@ struct Game {
         var currentWordPair: WordPair = WordPair(word1: "", word2: "", isCorrect: true)
         var statistics: StatisticsState = .init()
         var timerInfo: TimerInfoState = .init()
+        var isDialogPresented: Bool = false
     }
     
     private enum CancelID {
         case timer
     }
     
-    enum Action: ViewAction {
+    enum Action: BindableAction, ViewAction {
+        case binding(BindingAction<State>)
         case view(View)
         case didReceiveWordPair(WordPair)
         case timerTicked
@@ -30,7 +32,9 @@ struct Game {
         enum View {
             case wrongButtonTapped
             case correctButtonTapped
+            case restartButtonTapped
             case task
+            case quitGame
         }
     }
     
@@ -50,15 +54,21 @@ struct Game {
         return true
     }
      
-    func quitGame() -> Effect<Action> {
-        exit(0)
+    func gameEnded(state: inout State) -> Effect<Action> {
+        state.isDialogPresented = true
+        state.timerInfo.secondsElapsed = 0
+        state.timerInfo.isTimerActive = false
+        return .cancel(id: CancelID.timer)
     }
     
     var body: some Reducer<State, Action> {
+        BindingReducer()
         Reduce {
             state,
             action in
             switch action {
+            case .binding:
+                return .none
             case let .view(action):
                 switch action {
                 case .wrongButtonTapped:
@@ -68,7 +78,7 @@ struct Game {
                         state.statistics.correctAttemptsCounter+=1
                     }
                     if (!self.valid(state: state)) {
-                        return self.quitGame()
+                        return self.gameEnded(state: &state)
                     }
                     
                     return self.loadWordPair()
@@ -79,12 +89,18 @@ struct Game {
                         state.statistics.wrongAttemptsCounter+=1
                     }
                     if (!self.valid(state: state)) {
-                        return self.quitGame()
+                        return self.gameEnded(state: &state)
                     }
                     
                     return self.loadWordPair()
                 case .task:
                     return self.loadWordPair()
+                case .restartButtonTapped:
+                    state.statistics.correctAttemptsCounter = 0
+                    state.statistics.wrongAttemptsCounter = 0
+                    return self.loadWordPair()
+                case .quitGame:
+                    exit(0)
                 }
             case let .didReceiveWordPair(wordPair):
                 state.currentWordPair = wordPair
@@ -103,7 +119,7 @@ struct Game {
                 if (state.timerInfo.secondsElapsed >= secondsToAnswer) {
                     state.statistics.wrongAttemptsCounter+=1
                     if (!self.valid(state: state)) {
-                        return self.quitGame()
+                        return self.gameEnded(state: &state)
                     }
                     
                     return self.loadWordPair()
@@ -144,6 +160,18 @@ struct AppView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
+            }
+            .confirmationDialog("Change background", isPresented: $store.isDialogPresented) {
+                Button("Restart") {
+                    send(.restartButtonTapped)
+                }
+                Button("Quit") { 
+                    send(.quitGame)
+                }
+            } message: {
+                VStack {
+                    Text("Final Score: Correct Attempts: \(store.statistics.correctAttemptsCounter) Wrong Attempts: \(store.statistics.wrongAttemptsCounter)")
+                }
             }
         }
         .task {
