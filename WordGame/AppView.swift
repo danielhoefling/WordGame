@@ -100,7 +100,7 @@ struct Game {
                     state.statistics.wrongAttemptsCounter = 0
                     return self.loadWordPair()
                 case .quitGame:
-                    exit(0)
+                    fatalError("Crash on acceptance criteria.")
                 }
             case let .didReceiveWordPair(wordPair):
                 state.currentWordPair = wordPair
@@ -165,7 +165,7 @@ struct AppView: View {
                 Button("Restart") {
                     send(.restartButtonTapped)
                 }
-                Button("Quit") { 
+                Button("Quit", role: .cancel) {
                     send(.quitGame)
                 }
             } message: {
