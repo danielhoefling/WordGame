@@ -3,15 +3,26 @@ import ComposableArchitecture
 
 @DependencyClient
 struct WordService {
-    var wordpair: () async throws -> WordPair
+    var wordpair: (_ percentage: Double) async throws -> WordPair
 }
 
 extension WordService: DependencyKey {
     static let liveValue = Self(
-        wordpair: {
+        wordpair: { percentage in
             let translations = Bundle.main.decodeTranslations("words.json")
+            let needCorrectWordPair = trueWithProbability(percentage: percentage)
             
-            return WordPair(word1: translations[0].text_eng, word2: translations[0].text_spa, isCorrect: true)
+            if (needCorrectWordPair) { //Get random word pair from translation list
+                if let translation = translations.randomElement() {
+                    return WordPair(word1: translation.text_eng, word2: translation.text_spa, isCorrect: true)
+                }
+            } else { //Get one word and another not matching word
+                if let (firstWord, secondWord) = getRandomElements(from: translations) {
+                    return WordPair(word1: firstWord.text_eng, word2: secondWord.text_spa, isCorrect: false)
+                }
+            }
+            
+            return WordPair(word1: "", word2: "", isCorrect: true)
         }
     )
 }

@@ -5,6 +5,7 @@ import ComposableArchitecture
 @Reducer
 struct Game {
     @Dependency(\.wordService) var wordService
+    let correctWordProbability: Double = 25.0
     
     @ObservableState
     struct State {
@@ -36,7 +37,7 @@ struct Game {
                        return .none
                 case .task:
                     return .run { send in
-                        await send(.didReceiveWordPair(try await wordService.wordpair()))
+                        await send(.didReceiveWordPair(try await wordService.wordpair(correctWordProbability)))
                     }
                 }
             case let .didReceiveWordPair(wordPair):
@@ -58,8 +59,8 @@ struct AppView: View {
             Text("Wrong Attempts: \(store.statistics.wrongAttemptsCounter)")
                 .frame(maxWidth: .infinity, alignment: .trailing)
             Spacer()
-            Text(store.currentWordPair.word1)
             Text(store.currentWordPair.word2)
+            Text(store.currentWordPair.word1)
             Spacer()
             HStack {
                 Button("Correct") { 

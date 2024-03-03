@@ -21,6 +21,7 @@
 		655C32002B949DA3009DF129 /* TranslationPair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655C31FF2B949DA3009DF129 /* TranslationPair.swift */; };
 		655C32022B94A0E2009DF129 /* words.json in Resources */ = {isa = PBXBuildFile; fileRef = 655C32012B94A0E2009DF129 /* words.json */; };
 		655C32042B94B116009DF129 /* StatisticsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655C32032B94B116009DF129 /* StatisticsState.swift */; };
+		655C32062B94B816009DF129 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655C32052B94B816009DF129 /* Helpers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +57,7 @@
 		655C31FF2B949DA3009DF129 /* TranslationPair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationPair.swift; sourceTree = "<group>"; };
 		655C32012B94A0E2009DF129 /* words.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = words.json; sourceTree = "<group>"; };
 		655C32032B94B116009DF129 /* StatisticsState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsState.swift; sourceTree = "<group>"; };
+		655C32052B94B816009DF129 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +117,7 @@
 				655C31D22B9498B7009DF129 /* Preview Content */,
 				655C31F92B949BCE009DF129 /* WordService.swift */,
 				655C32032B94B116009DF129 /* StatisticsState.swift */,
+				655C32052B94B816009DF129 /* Helpers.swift */,
 			);
 			path = WordGame;
 			sourceTree = "<group>";
@@ -291,6 +294,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				655C32002B949DA3009DF129 /* TranslationPair.swift in Sources */,
+				655C32062B94B816009DF129 /* Helpers.swift in Sources */,
 				655C31CF2B9498B6009DF129 /* AppView.swift in Sources */,
 				655C31FE2B949C42009DF129 /* WordPair.swift in Sources */,
 				655C31CD2B9498B6009DF129 /* WordGameApp.swift in Sources */,
