@@ -14,6 +14,7 @@
 		655C31DE2B9498B7009DF129 /* WordGameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655C31DD2B9498B7009DF129 /* WordGameTests.swift */; };
 		655C31E82B9498B7009DF129 /* WordGameUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655C31E72B9498B7009DF129 /* WordGameUITests.swift */; };
 		655C31EA2B9498B7009DF129 /* WordGameUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655C31E92B9498B7009DF129 /* WordGameUITestsLaunchTests.swift */; };
+		655C31F82B9499F1009DF129 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 655C31F72B9499F1009DF129 /* ComposableArchitecture */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				655C31F82B9499F1009DF129 /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,6 +145,9 @@
 			dependencies = (
 			);
 			name = WordGame;
+			packageProductDependencies = (
+				655C31F72B9499F1009DF129 /* ComposableArchitecture */,
+			);
 			productName = WordGame;
 			productReference = 655C31C92B9498B6009DF129 /* WordGame.app */;
 			productType = "com.apple.product-type.application";
@@ -215,6 +220,9 @@
 				Base,
 			);
 			mainGroup = 655C31C02B9498B6009DF129;
+			packageReferences = (
+				655C31F62B9499F1009DF129 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+			);
 			productRefGroup = 655C31CA2B9498B6009DF129 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -582,6 +590,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		655C31F62B9499F1009DF129 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				branch = "shared-state-beta";
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		655C31F72B9499F1009DF129 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 655C31F62B9499F1009DF129 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 655C31C12B9498B6009DF129 /* Project object */;
 }
