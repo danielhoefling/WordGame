@@ -5,7 +5,7 @@ import ComposableArchitecture
 @Reducer
 struct Game {
     @Dependency(\.wordService) var wordService
-    let correctWordProbability: Double = 25.0
+    private let correctWordProbability: Double = 25.0
     
     @ObservableState
     struct State {
@@ -16,12 +16,19 @@ struct Game {
     enum Action: ViewAction {
         case view(View)
         case didReceiveWordPair(WordPair)
-        case nextWordPair
         
         enum View {
             case wrongButtonTapped
             case correctButtonTapped
             case task
+        }
+    }
+    
+    func loadWordPair() -> Effect<Action> {
+        return .run { send in
+            await send(.didReceiveWordPair(
+                try await wordService.wordpair(percentage: correctWordProbability))
+            )
         }
     }
     
@@ -38,30 +45,20 @@ struct Game {
                     } else {
                         state.statistics.correctAttemptsCounter+=1
                     }
-                    return .run { send in
-                        await send(.nextWordPair)
-                    }
+                    return self.loadWordPair()
                 case .correctButtonTapped:
                     if state.currentWordPair.isCorrect {
                         state.statistics.correctAttemptsCounter+=1
                     } else {
                         state.statistics.wrongAttemptsCounter+=1
                     }
-                    return .run { send in
-                        await send(.nextWordPair)
-                    }
+                    return self.loadWordPair()
                 case .task:
-                    return .run { send in
-                        await send(.nextWordPair)
-                    }
+                    return self.loadWordPair()
                 }
             case let .didReceiveWordPair(wordPair):
                 state.currentWordPair = wordPair
                 return .none
-            case .nextWordPair:
-                return .run { send in
-                    await send(.didReceiveWordPair(try await wordService.wordpair(correctWordProbability)))
-                }
             }
         }
     }
@@ -79,15 +76,24 @@ struct AppView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
             Spacer()
             Text(store.currentWordPair.word2)
+                .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
+                .padding(20)
             Text(store.currentWordPair.word1)
+                .font(.title3)
+                .padding(20)
+            Text(String(store.currentWordPair.isCorrect))
             Spacer()
             HStack {
                 Button("Correct") { 
                     send(.correctButtonTapped)
                 }
-                Button("Wrong") { 
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+                Button("Wrong") {
                     send(.wrongButtonTapped)
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
             }
         }
         .task {
