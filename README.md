@@ -13,7 +13,7 @@
 
 ## Decisions made to solve certain aspects of the game
 
-- I wrote a word service to request new word pairs.
+- I wrote a word service to request new word pairs and mock it for testing.
 - I used a controllable clock to control the limited time to tap an answer button.
 - I used The Composable Architecture framework to solve problems such as state management, side effects, testing and data flow
 
@@ -29,4 +29,5 @@
 - Error handling
 - Test coverage
 - Animations
+- Localize strings
 - File structure (Micro Modules)
