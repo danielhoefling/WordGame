@@ -13,7 +13,10 @@
 
 ## Decisions made to solve certain aspects of the game
 
-I used The Composable Architecture to solve problems such as state management, side effects, testing and data flow
+- I wrote a word service to request new word pairs.
+- I used a controllable clock to control the limited time to tap an answer button.
+- I used The Composable Architecture framework to solve problems such as state management, side effects, testing and data flow
+
 
 ## Decisions made because of restricted time
 
@@ -26,4 +29,4 @@ I used The Composable Architecture to solve problems such as state management, s
 - Error handling
 - Test coverage
 - Animations
-- File structure (Mini Modules)
+- File structure (Micro Modules)
