@@ -133,19 +133,24 @@ struct Game {
 @ViewAction(for: Game.self)
 struct AppView: View {
     @Bindable var store: StoreOf<Game>
+    private let textColor: Color = Color(UIColor.darkGray)
     
     var body: some View {
         VStack {
             Text("Correct Attempts: \(store.statistics.correctAttemptsCounter)")
                 .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundColor(textColor)
             Text("Wrong Attempts: \(store.statistics.wrongAttemptsCounter)")
                 .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundColor(textColor)
             Spacer()
             Text(store.currentWordPair.word2)
                 .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
+                .foregroundColor(textColor)
                 .padding(20)
             Text(store.currentWordPair.word1)
                 .font(.title3)
+                .foregroundColor(textColor)
                 .padding(20)
             Spacer()
             HStack {
@@ -164,6 +169,7 @@ struct AppView: View {
                             .fill(.green)
                         )
                 }
+                .font(.title)
                 .padding()
                 Button() {
                     send(.wrongButtonTapped)
@@ -180,6 +186,7 @@ struct AppView: View {
                         .fill(.red)
                     )
             }
+            .font(.title)
             }
             .confirmationDialog("Change background", isPresented: $store.isDialogPresented) {
                 Button("Restart") {
