@@ -12,7 +12,7 @@ struct Game {
     
     @ObservableState
     struct State: Equatable {
-        var currentWordPair: WordPair = WordPair(word1: "", word2: "", isCorrect: true)
+        var currentWordPair: WordPair?
         var statistics: StatisticsState = .init()
         var timerInfo: TimerInfoState = .init()
         var isDialogPresented: Bool = false
@@ -38,11 +38,11 @@ struct Game {
     }
     
     func loadWordPair() -> Effect<Action> {
-        return .run { send in
-            if let wordPair = wordService.wordpair(percentage: correctWordProbability) {
-                await send(.didReceiveWordPair(wordPair))
-            } //Todo: Error handling if wordpair returns nil
+        if let wordPair = wordService.wordpair(percentage: correctWordProbability) {
+            return .send(.didReceiveWordPair(wordPair))
         }
+        
+        return .none
     }
     
     private func valid(state: State) -> Bool {
@@ -71,7 +71,7 @@ struct Game {
             case let .view(action):
                 switch action {
                 case .wrongButtonTapped:
-                    if state.currentWordPair.isCorrect {
+                    if state.currentWordPair?.isCorrect == true {
                         state.statistics.wrongAttemptsCounter+=1
                     } else {
                         state.statistics.correctAttemptsCounter+=1
@@ -82,7 +82,7 @@ struct Game {
                     
                     return self.loadWordPair()
                 case .correctButtonTapped:
-                    if state.currentWordPair.isCorrect {
+                    if state.currentWordPair?.isCorrect == true {
                         state.statistics.correctAttemptsCounter+=1
                     } else {
                         state.statistics.wrongAttemptsCounter+=1
@@ -110,7 +110,7 @@ struct Game {
                 return .run { [isTimerActive = state.timerInfo.isTimerActive] send in
                     guard isTimerActive else { return }
                     for await _ in self.clock.timer(interval: .seconds(1)) {
-                        await send(.timerTicked, animation: .interpolatingSpring(stiffness: 3000, damping: 40))
+                        await send(.timerTicked)
                     }
                 }
                 .cancellable(id: CancelID.timer, cancelInFlight: true)
@@ -144,14 +144,16 @@ struct AppView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .foregroundColor(textColor)
             Spacer()
-            Text(store.currentWordPair.word2)
-                .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
-                .foregroundColor(textColor)
-                .padding(20)
-            Text(store.currentWordPair.word1)
-                .font(.title3)
-                .foregroundColor(textColor)
-                .padding(20)
+            if let pair = store.currentWordPair {
+                Text(pair.word2)
+                    .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
+                    .foregroundColor(textColor)
+                    .padding(20)
+                Text(pair.word1)
+                    .font(.title3)
+                    .foregroundColor(textColor)
+                    .padding(20)
+            }
             Spacer()
             HStack {
                 Button() {
