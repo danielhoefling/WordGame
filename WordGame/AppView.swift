@@ -169,7 +169,7 @@ struct AppView: View {
                             .fill(.green)
                         )
                 }
-                .font(.title)
+                .font(.title2)
                 .padding()
                 Button() {
                     send(.wrongButtonTapped)
@@ -186,7 +186,7 @@ struct AppView: View {
                         .fill(.red)
                     )
             }
-            .font(.title)
+            .font(.title2)
             }
             .confirmationDialog("Change background", isPresented: $store.isDialogPresented) {
                 Button("Restart") {
