@@ -147,19 +147,39 @@ struct AppView: View {
             Text(store.currentWordPair.word1)
                 .font(.title3)
                 .padding(20)
-            Text(String(store.currentWordPair.isCorrect))
             Spacer()
             HStack {
-                Button("Correct") { 
+                Button() {
                     send(.correctButtonTapped)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                Button("Wrong") {
+                label: {
+                    Text("Correct")
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(
+                            RoundedRectangle(
+                                cornerRadius: 20,
+                                style: .continuous
+                            )
+                            .fill(.green)
+                        )
+                }
+                .padding()
+                Button() {
                     send(.wrongButtonTapped)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
+            label: {
+                Text("Wrong")
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(
+                        RoundedRectangle(
+                            cornerRadius: 20,
+                            style: .continuous
+                        )
+                        .fill(.red)
+                    )
+            }
             }
             .confirmationDialog("Change background", isPresented: $store.isDialogPresented) {
                 Button("Restart") {
