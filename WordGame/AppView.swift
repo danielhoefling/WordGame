@@ -1,7 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
 
-
 @Reducer
 struct Game {
     @Dependency(\.wordService) var wordService
@@ -12,7 +11,7 @@ struct Game {
     private let allowedWordPairs: Int = 15
     
     @ObservableState
-    struct State {
+    struct State: Equatable {
         var currentWordPair: WordPair = WordPair(word1: "", word2: "", isCorrect: true)
         var statistics: StatisticsState = .init()
         var timerInfo: TimerInfoState = .init()
@@ -40,9 +39,9 @@ struct Game {
     
     func loadWordPair() -> Effect<Action> {
         return .run { send in
-            await send(.didReceiveWordPair(
-                try await wordService.wordpair(percentage: correctWordProbability))
-            )
+            if let wordPair = wordService.wordpair(percentage: correctWordProbability) {
+                await send(.didReceiveWordPair(wordPair))
+            } //Todo: Error handling if wordpair returns nil
         }
     }
     
@@ -100,7 +99,8 @@ struct Game {
                     state.statistics.wrongAttemptsCounter = 0
                     return self.loadWordPair()
                 case .quitGame:
-                    fatalError("Crash on acceptance criteria.")
+                    exit(0)
+                    //fatalError("Crash on acceptance criteria.")
                 }
             case let .didReceiveWordPair(wordPair):
                 state.currentWordPair = wordPair

@@ -1,0 +1,38 @@
+{
+  "configurations" : [
+    {
+      "id" : "26D949E2-C686-4269-8BE7-C1E9D692E166",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:WordGame.xcodeproj",
+      "identifier" : "655C31C82B9498B6009DF129",
+      "name" : "WordGame"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:WordGame.xcodeproj",
+        "identifier" : "655C31D82B9498B7009DF129",
+        "name" : "WordGameTests"
+      }
+    },
+    {
+      "enabled" : false,
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:WordGame.xcodeproj",
+        "identifier" : "655C31E22B9498B7009DF129",
+        "name" : "WordGameUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

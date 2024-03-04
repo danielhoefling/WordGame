@@ -3,13 +3,13 @@ import ComposableArchitecture
 
 @DependencyClient
 struct WordService {
-    var wordpair: (_ percentage: Double) async throws -> WordPair
+    var wordpair: (_ percentage: Double) -> WordPair?
 }
 
 extension WordService: DependencyKey {
     static let liveValue = Self(
         wordpair: { percentage in
-            let translations = Bundle.main.decodeTranslations("words.json")
+            guard let translations = try? Bundle.main.decodeTranslations("words.json") else { return nil }
             let needCorrectWordPair = trueWithProbability(percentage: percentage)
             
             if (needCorrectWordPair) { //Get random word pair from translation list
@@ -22,7 +22,7 @@ extension WordService: DependencyKey {
                 }
             }
             
-            return WordPair(word1: "", word2: "", isCorrect: true)
+            return nil
         }
     )
 }
@@ -34,22 +34,27 @@ extension DependencyValues {
  }
 }
 
+extension WordService: TestDependencyKey {
+    public static let testValue = Self()
+    
+    /*public static let previewValue = Self(
+        wordpair: {_ in .init(word1: "Word1", word2: "Word2", isCorrect: true)}
+    )*/
+}
+
+enum BundleError: Error {
+    case invalidResource
+}
+
 extension Bundle {
-    func decodeTranslations(_ file: String) -> [TranslationPair] {
+    func decodeTranslations(_ file: String) throws -> [TranslationPair] {
         guard let url = self.url(forResource: file, withExtension: nil) else {
-            fatalError("Failed to locate \(file) in bundle.")
+            throw BundleError.invalidResource
         }
-
-        guard let data = try? Data(contentsOf: url) else {
-            fatalError("Failed to load \(file) from bundle.")
-        }
-
+                
+        let data = try Data(contentsOf: url)
         let decoder = JSONDecoder()
 
-        guard let loaded = try? decoder.decode([TranslationPair].self, from: data) else {
-            fatalError("Failed to decode \(file) from bundle.")
-        }
-
-        return loaded
+        return try decoder.decode([TranslationPair].self, from: data)
     }
 }
