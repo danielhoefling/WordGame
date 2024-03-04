@@ -76,35 +76,32 @@ final class WordGameTests: XCTestCase {
             $0.timerInfo.isTimerActive = true
         }
         
-        store.dependencies.wordService.wordpair = { _ in
-            WordPair(word1: "Word3", word2: "Word4", isCorrect: false)
-        }
-        
-        let task2 = await store.send(.view(.correctButtonTapped)) {
+        await store.send(.view(.correctButtonTapped)) {
             $0.statistics.correctAttemptsCounter = 1
         }
         
-        await store.receive(\.didReceiveWordPair) {
-            $0.currentWordPair = WordPair(word1: "Word3", word2: "Word4", isCorrect: false)
-            $0.timerInfo.secondsElapsed = 0
-        }
+        await store.receive(\.didReceiveWordPair)
         
-        store.dependencies.wordService.wordpair = { _ in
-            WordPair(word1: "Word5", word2: "Word6", isCorrect: true)
-        }
-        
-        let task3 = await store.send(.view(.correctButtonTapped)) {
+        await store.send(.view(.wrongButtonTapped)) {
             $0.statistics.wrongAttemptsCounter = 1
         }
         
-        await store.receive(\.didReceiveWordPair) {
-            $0.currentWordPair = WordPair(word1: "Word5", word2: "Word6", isCorrect: true)
-            $0.timerInfo.secondsElapsed = 0
+        await store.receive(\.didReceiveWordPair)
+        
+        await store.send(.view(.wrongButtonTapped)) {
+            $0.statistics.wrongAttemptsCounter = 2
         }
-
+        
+        await store.receive(\.didReceiveWordPair)
+        
+        await store.send(.view(.wrongButtonTapped)) {
+            $0.statistics.wrongAttemptsCounter = 3
+            $0.timerInfo.isTimerActive = false
+            $0.isDialogPresented = true
+        }
+        
         await task.cancel()
-        await task2.cancel()
-        await task3.cancel()
+
     }
 }
 
