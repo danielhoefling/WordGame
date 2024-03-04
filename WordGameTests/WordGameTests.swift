@@ -1,36 +1,109 @@
-//
-//  WordGameTests.swift
-//  WordGameTests
-//
-//  Created by Daniel on 03.03.24.
-//
-
 import XCTest
+import ComposableArchitecture
 @testable import WordGame
 
+@MainActor
 final class WordGameTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    func testGameFlowTimerEllapsed() async {
+        let store = TestStore(
+            initialState: Game.State()
+        ) {
+            Game()
         }
+        
+        store.dependencies.wordService.wordpair = { _ in
+            WordPair(word1: "Word1", word2: "Word2", isCorrect: true)
+        }
+        
+        let testClock = TestClock()
+        store.dependencies.continuousClock = testClock
+        
+        let task =  await store.send(.view(.task))
+        await store.receive(\.didReceiveWordPair) {
+            $0.currentWordPair = WordPair(word1: "Word1", word2: "Word2", isCorrect: true)
+            $0.timerInfo.isTimerActive = true
+        }
+        
+        await testClock.advance(by: .seconds(4))
+        await store.receive(\.timerTicked) {
+            $0.timerInfo.secondsElapsed = 1
+        }
+        await store.receive(\.timerTicked) {
+            $0.timerInfo.secondsElapsed = 2
+        }
+        await store.receive(\.timerTicked) {
+            $0.timerInfo.secondsElapsed = 3
+        }
+        await store.receive(\.timerTicked) {
+            $0.timerInfo.secondsElapsed = 4
+        }
+        
+        store.dependencies.wordService.wordpair = { _ in
+            WordPair(word1: "Word3", word2: "Word4", isCorrect: true)
+        }
+        
+        await testClock.advance(by: .seconds(1))
+        await store.receive(\.timerTicked) {
+            $0.timerInfo.secondsElapsed = 5
+            $0.statistics.wrongAttemptsCounter = 1
+        }
+        
+        await store.receive(\.didReceiveWordPair) {
+            $0.currentWordPair = WordPair(word1: "Word3", word2: "Word4", isCorrect: true)
+            $0.timerInfo.secondsElapsed = 0
+        }
+        
+        await task.cancel()
     }
+    
+    func testGameFlowButtonTapped() async {
+        let store = TestStore(
+            initialState: Game.State()
+        ) {
+            Game()
+        }
+        
+        store.dependencies.wordService.wordpair = { _ in
+            WordPair(word1: "Word1", word2: "Word2", isCorrect: true)
+        }
+        
+        let testClock = TestClock()
+        store.dependencies.continuousClock = testClock
+        
+        let task = await store.send(.view(.task))
+        await store.receive(\.didReceiveWordPair) {
+            $0.currentWordPair = WordPair(word1: "Word1", word2: "Word2", isCorrect: true)
+            $0.timerInfo.isTimerActive = true
+        }
+        
+        await store.send(.view(.correctButtonTapped)) {
+            $0.statistics.correctAttemptsCounter = 1
+        }
+        
+        await store.receive(\.didReceiveWordPair)
+        
+        await store.send(.view(.wrongButtonTapped)) {
+            $0.statistics.wrongAttemptsCounter = 1
+        }
+        
+        await store.receive(\.didReceiveWordPair)
+        
+        await store.send(.view(.wrongButtonTapped)) {
+            $0.statistics.wrongAttemptsCounter = 2
+        }
+        
+        await store.receive(\.didReceiveWordPair)
+        
+        await store.send(.view(.wrongButtonTapped)) {
+            $0.statistics.wrongAttemptsCounter = 3
+            $0.timerInfo.isTimerActive = false
+            $0.isDialogPresented = true
+        }
+        
+        await task.cancel()
 
+    }
 }
+
+
+                              

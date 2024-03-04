@@ -1,4 +1,4 @@
-struct StatisticsState {
+struct StatisticsState: Equatable {
     var correctAttemptsCounter = 0
     var wrongAttemptsCounter = 0
     

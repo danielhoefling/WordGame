@@ -1,7 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
 
-
 @Reducer
 struct Game {
     @Dependency(\.wordService) var wordService
@@ -12,17 +11,19 @@ struct Game {
     private let allowedWordPairs: Int = 15
     
     @ObservableState
-    struct State {
-        var currentWordPair: WordPair = WordPair(word1: "", word2: "", isCorrect: true)
+    struct State: Equatable {
+        var currentWordPair: WordPair?
         var statistics: StatisticsState = .init()
         var timerInfo: TimerInfoState = .init()
+        var isDialogPresented: Bool = false
     }
     
     private enum CancelID {
         case timer
     }
     
-    enum Action: ViewAction {
+    enum Action: BindableAction, ViewAction {
+        case binding(BindingAction<State>)
         case view(View)
         case didReceiveWordPair(WordPair)
         case timerTicked
@@ -30,16 +31,18 @@ struct Game {
         enum View {
             case wrongButtonTapped
             case correctButtonTapped
+            case restartButtonTapped
             case task
+            case quitGame
         }
     }
     
     func loadWordPair() -> Effect<Action> {
-        return .run { send in
-            await send(.didReceiveWordPair(
-                try await wordService.wordpair(percentage: correctWordProbability))
-            )
+        if let wordPair = wordService.wordpair(percentage: correctWordProbability) {
+            return .send(.didReceiveWordPair(wordPair))
         }
+        
+        return .none
     }
     
     private func valid(state: State) -> Bool {
@@ -50,41 +53,54 @@ struct Game {
         return true
     }
      
-    func quitGame() -> Effect<Action> {
-        exit(0)
+    func gameEnded(state: inout State) -> Effect<Action> {
+        state.isDialogPresented = true
+        state.timerInfo.secondsElapsed = 0
+        state.timerInfo.isTimerActive = false
+        return .cancel(id: CancelID.timer)
     }
     
     var body: some Reducer<State, Action> {
+        BindingReducer()
         Reduce {
             state,
             action in
             switch action {
+            case .binding:
+                return .none
             case let .view(action):
                 switch action {
                 case .wrongButtonTapped:
-                    if state.currentWordPair.isCorrect {
+                    if state.currentWordPair?.isCorrect == true {
                         state.statistics.wrongAttemptsCounter+=1
                     } else {
                         state.statistics.correctAttemptsCounter+=1
                     }
                     if (!self.valid(state: state)) {
-                        return self.quitGame()
+                        return self.gameEnded(state: &state)
                     }
                     
                     return self.loadWordPair()
                 case .correctButtonTapped:
-                    if state.currentWordPair.isCorrect {
+                    if state.currentWordPair?.isCorrect == true {
                         state.statistics.correctAttemptsCounter+=1
                     } else {
                         state.statistics.wrongAttemptsCounter+=1
                     }
                     if (!self.valid(state: state)) {
-                        return self.quitGame()
+                        return self.gameEnded(state: &state)
                     }
                     
                     return self.loadWordPair()
                 case .task:
                     return self.loadWordPair()
+                case .restartButtonTapped:
+                    state.statistics.correctAttemptsCounter = 0
+                    state.statistics.wrongAttemptsCounter = 0
+                    return self.loadWordPair()
+                case .quitGame:
+                    exit(0)
+                    //fatalError("Crash on acceptance criteria.")
                 }
             case let .didReceiveWordPair(wordPair):
                 state.currentWordPair = wordPair
@@ -94,7 +110,7 @@ struct Game {
                 return .run { [isTimerActive = state.timerInfo.isTimerActive] send in
                     guard isTimerActive else { return }
                     for await _ in self.clock.timer(interval: .seconds(1)) {
-                        await send(.timerTicked, animation: .interpolatingSpring(stiffness: 3000, damping: 40))
+                        await send(.timerTicked)
                     }
                 }
                 .cancellable(id: CancelID.timer, cancelInFlight: true)
@@ -103,7 +119,7 @@ struct Game {
                 if (state.timerInfo.secondsElapsed >= secondsToAnswer) {
                     state.statistics.wrongAttemptsCounter+=1
                     if (!self.valid(state: state)) {
-                        return self.quitGame()
+                        return self.gameEnded(state: &state)
                     }
                     
                     return self.loadWordPair()
@@ -117,33 +133,74 @@ struct Game {
 @ViewAction(for: Game.self)
 struct AppView: View {
     @Bindable var store: StoreOf<Game>
+    private let textColor: Color = Color(UIColor.darkGray)
     
     var body: some View {
         VStack {
             Text("Correct Attempts: \(store.statistics.correctAttemptsCounter)")
                 .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundColor(textColor)
             Text("Wrong Attempts: \(store.statistics.wrongAttemptsCounter)")
                 .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundColor(textColor)
             Spacer()
-            Text(store.currentWordPair.word2)
-                .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
-                .padding(20)
-            Text(store.currentWordPair.word1)
-                .font(.title3)
-                .padding(20)
-            Text(String(store.currentWordPair.isCorrect))
+            if let pair = store.currentWordPair {
+                Text(pair.word2)
+                    .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
+                    .foregroundColor(textColor)
+                    .padding(20)
+                Text(pair.word1)
+                    .font(.title3)
+                    .foregroundColor(textColor)
+                    .padding(20)
+            }
             Spacer()
             HStack {
-                Button("Correct") { 
+                Button() {
                     send(.correctButtonTapped)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                Button("Wrong") {
+                label: {
+                    Text("Correct")
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(
+                            RoundedRectangle(
+                                cornerRadius: 20,
+                                style: .continuous
+                            )
+                            .fill(.green)
+                        )
+                }
+                .font(.title2)
+                .padding()
+                Button() {
                     send(.wrongButtonTapped)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
+            label: {
+                Text("Wrong")
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(
+                        RoundedRectangle(
+                            cornerRadius: 20,
+                            style: .continuous
+                        )
+                        .fill(.red)
+                    )
+            }
+            .font(.title2)
+            }
+            .confirmationDialog("Change background", isPresented: $store.isDialogPresented) {
+                Button("Restart") {
+                    send(.restartButtonTapped)
+                }
+                Button("Quit", role: .cancel) {
+                    send(.quitGame)
+                }
+            } message: {
+                VStack {
+                    Text("Final Score: Correct Attempts: \(store.statistics.correctAttemptsCounter) Wrong Attempts: \(store.statistics.wrongAttemptsCounter)")
+                }
             }
         }
         .task {
